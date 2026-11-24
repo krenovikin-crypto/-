@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Лиса в эфире",
+  "description": "Выбери питомца из каталога для прямых эфиров Twitch.",
+  "version": "1.3.0",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "alarms"
+  ],
+  "action": {
+    "default_title": "Питомцы каналов"
+  },
+  "icons": {
+    "128": "art/icon.png"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.twitch.tv/*",
+        "https://twitch.tv/*"
+      ],
+      "js": [
+        "profiles.js",
+        "behavior.js",
+        "watch.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

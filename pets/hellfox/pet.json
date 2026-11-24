@@ -1,0 +1,270 @@
+{
+  "name": "Лиса",
+  "channel": "hell_fox_x",
+  "animations": {
+    "idle": {
+      "file": "idle.gif",
+      "ms": 4120,
+      "label": "Стойка"
+    },
+    "greeting": {
+      "file": "greeting.gif",
+      "ms": 1700,
+      "label": "Приветствие"
+    },
+    "jump": {
+      "file": "jump.gif",
+      "ms": 1520,
+      "label": "Прыжок"
+    },
+    "sad": {
+      "file": "sad.gif",
+      "ms": 3710,
+      "label": "Грусть"
+    },
+    "wait": {
+      "file": "wait.gif",
+      "ms": 3710,
+      "label": "Ожидание"
+    },
+    "check-result": {
+      "file": "check-result.gif",
+      "ms": 3710,
+      "label": "Проверка результата"
+    },
+    "head-pet": {
+      "file": "head-pet.gif",
+      "ms": 2750,
+      "label": "Поглаживание"
+    },
+    "tail-reaction": {
+      "file": "tail-reaction.gif",
+      "ms": 2980,
+      "label": "Реакция на хвост"
+    },
+    "talking": {
+      "file": "talking.gif",
+      "ms": 1720,
+      "label": "Разговор"
+    },
+    "open": {
+      "file": "open.gif",
+      "ms": 2200,
+      "label": "Открыть ноутбук"
+    },
+    "typing": {
+      "file": "typing.gif",
+      "ms": 900,
+      "label": "Печатать"
+    },
+    "close": {
+      "file": "close.gif",
+      "ms": 2150,
+      "label": "Закрыть ноутбук"
+    },
+    "fall-asleep": {
+      "file": "fall-asleep.gif",
+      "ms": 7320,
+      "label": "Засыпание"
+    },
+    "sleep": {
+      "file": "sleep.gif",
+      "ms": 3840,
+      "label": "Сон"
+    },
+    "stalk-right": {
+      "file": "stalk-right.gif",
+      "ms": 1760,
+      "label": "Охота вправо"
+    },
+    "notice-right": {
+      "file": "notice-right.gif",
+      "ms": 200,
+      "label": "Заметить курсор справа"
+    },
+    "pounce-right": {
+      "file": "pounce-right.gif",
+      "ms": 720,
+      "label": "Поймать курсор справа"
+    },
+    "stalk-left": {
+      "file": "stalk-left.gif",
+      "ms": 1760,
+      "label": "Охота влево"
+    },
+    "notice-left": {
+      "file": "notice-left.gif",
+      "ms": 200,
+      "label": "Заметить курсор слева"
+    },
+    "pounce-left": {
+      "file": "pounce-left.gif",
+      "ms": 720,
+      "label": "Поймать курсор слева"
+    },
+    "caught-right": {
+      "file": "caught-right.gif",
+      "ms": 1590,
+      "label": "Удержание справа",
+      "anchors": [
+        [
+          0.6458,
+          0.6683,
+          1000
+        ],
+        [
+          0.5885,
+          0.6587,
+          1140
+        ],
+        [
+          0.5885,
+          0.6635,
+          1230
+        ],
+        [
+          0.5833,
+          0.6635,
+          1360
+        ],
+        [
+          0.5885,
+          0.6635,
+          1450
+        ],
+        [
+          0.5885,
+          0.6635,
+          1590
+        ]
+      ]
+    },
+    "caught-left": {
+      "file": "caught-left.gif",
+      "ms": 1590,
+      "label": "Удержание слева",
+      "anchors": [
+        [
+          0.349,
+          0.6683,
+          1000
+        ],
+        [
+          0.4062,
+          0.6587,
+          1140
+        ],
+        [
+          0.4062,
+          0.6635,
+          1230
+        ],
+        [
+          0.4115,
+          0.6635,
+          1360
+        ],
+        [
+          0.4062,
+          0.6635,
+          1450
+        ],
+        [
+          0.4062,
+          0.6635,
+          1590
+        ]
+      ]
+    },
+    "run-right": {
+      "file": "run-right.gif",
+      "ms": 960,
+      "label": "Бег вправо"
+    },
+    "run-left": {
+      "file": "run-left.gif",
+      "ms": 960,
+      "label": "Бег влево"
+    },
+    "gaze-00": {
+      "file": "gaze-00.gif",
+      "ms": 1160,
+      "label": "Взгляд 0.0°"
+    },
+    "gaze-01": {
+      "file": "gaze-01.gif",
+      "ms": 1160,
+      "label": "Взгляд 22.5°"
+    },
+    "gaze-02": {
+      "file": "gaze-02.gif",
+      "ms": 1160,
+      "label": "Взгляд 45.0°"
+    },
+    "gaze-03": {
+      "file": "gaze-03.gif",
+      "ms": 1160,
+      "label": "Взгляд 67.5°"
+    },
+    "gaze-04": {
+      "file": "gaze-04.gif",
+      "ms": 1160,
+      "label": "Взгляд 90.0°"
+    },
+    "gaze-05": {
+      "file": "gaze-05.gif",
+      "ms": 1160,
+      "label": "Взгляд 112.5°"
+    },
+    "gaze-06": {
+      "file": "gaze-06.gif",
+      "ms": 1160,
+      "label": "Взгляд 135.0°"
+    },
+    "gaze-07": {
+      "file": "gaze-07.gif",
+      "ms": 1160,
+      "label": "Взгляд 157.5°"
+    },
+    "gaze-08": {
+      "file": "gaze-08.gif",
+      "ms": 1160,
+      "label": "Взгляд 180.0°"
+    },
+    "gaze-09": {
+      "file": "gaze-09.gif",
+      "ms": 1160,
+      "label": "Взгляд 202.5°"
+    },
+    "gaze-10": {
+      "file": "gaze-10.gif",
+      "ms": 1160,
+      "label": "Взгляд 225.0°"
+    },
+    "gaze-11": {
+      "file": "gaze-11.gif",
+      "ms": 1160,
+      "label": "Взгляд 247.5°"
+    },
+    "gaze-12": {
+      "file": "gaze-12.gif",
+      "ms": 1160,
+      "label": "Взгляд 270.0°"
+    },
+    "gaze-13": {
+      "file": "gaze-13.gif",
+      "ms": 1160,
+      "label": "Взгляд 292.5°"
+    },
+    "gaze-14": {
+      "file": "gaze-14.gif",
+      "ms": 1160,
+      "label": "Взгляд 315.0°"
+    },
+    "gaze-15": {
+      "file": "gaze-15.gif",
+      "ms": 1160,
+      "label": "Взгляд 337.5°"
+    }
+  }
+}
