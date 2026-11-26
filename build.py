@@ -29,6 +29,7 @@ def build(root, out, url):
         used.add(channel)
         moves={}
         for key,entry in data['animations'].items():
+            if key=='talking': continue
             asset=(folder/entry['file']).resolve()
             if folder.resolve() not in asset.parents:raise ValueError('Путь вне папки персонажа')
             raw=asset.read_bytes()

@@ -1,5 +1,83 @@
 importScripts("endpoint.js","profiles.js");
 chrome.action.onClicked.addListener(()=>chrome.runtime.openOptionsPage());
+const legacyArt={
+  "6dc9fdf5af26b668641d34b2d32849f8b41b69dae1fe7c21e71d8aeaadc3f7f4.gif": {
+    "file": "9a8fe52423f694020e3368cf58e0fa060a6a9539e60c131b7f1cbb40339d614b.gif",
+    "path": "art/idle.gif"
+  },
+  "326d3239311c3fe947744d08a4d44ff03318da439bbcdc22b02805506a0e2a77.gif": {
+    "file": "e574cb2ece691c2ae3d5e4688421316d01d2066a3e4e969ead4f0864f8010f93.gif",
+    "path": "art/caught-left.gif",
+    "anchors": [
+      [
+        0.4115,
+        0.6635,
+        130
+      ],
+      [
+        0.4062,
+        0.6635,
+        220
+      ],
+      [
+        0.4062,
+        0.6635,
+        360
+      ],
+      [
+        0.349,
+        0.6683,
+        1360
+      ],
+      [
+        0.4062,
+        0.6587,
+        1500
+      ],
+      [
+        0.4062,
+        0.6635,
+        1590
+      ]
+    ]
+  },
+  "04381d7d245265e6280c94c8dade9e564c82783b9d4a5d8d329a76dd5d10607b.gif": {
+    "file": "3d310d51c00121261d15c7b9f16e87f4d6631876b79dfbb07e0ca2ef0342d15d.gif",
+    "path": "art/caught-right.gif",
+    "anchors": [
+      [
+        0.5833,
+        0.6635,
+        130
+      ],
+      [
+        0.5885,
+        0.6635,
+        220
+      ],
+      [
+        0.5885,
+        0.6635,
+        360
+      ],
+      [
+        0.6458,
+        0.6683,
+        1360
+      ],
+      [
+        0.5885,
+        0.6587,
+        1500
+      ],
+      [
+        0.5885,
+        0.6635,
+        1590
+      ]
+    ]
+  }
+};
 let pendingRefresh,lastRefresh=0;
 const installs=new Map();
 async function bytes(path,sha){
@@ -28,19 +106,27 @@ async function install(id){
   const list=(await chrome.storage.local.get(indexKey))[indexKey]||[];
   const pet=list.find(p=>p.id===id);
   if(!pet)throw Error("Персонаж отсутствует в каталоге.");
-  const key="pack/"+pet.rev;
+  const key="pack-v14/"+pet.rev;
   if(installs.has(key))return installs.get(key);
   const task=(async()=>{
     const saved=(await chrome.storage.local.get(key))[key];
     if(saved)return saved;
-    const moves=JSON.parse(new TextDecoder().decode(await bytes("files/"+pet.rev+".json",pet.rev)));
+    const legacyKey="pack/"+pet.rev;
+    const moves=(await chrome.storage.local.get(legacyKey))[legacyKey] || JSON.parse(new TextDecoder().decode(await bytes("files/"+pet.rev+".json",pet.rev)));
+    delete moves.talking;
+    const bundled=new Map();
+    for(const move of Object.values(moves)){
+      const fix=legacyArt[move.file];
+      if(fix){move.file=fix.file;if(fix.anchors)move.anchors=fix.anchors;}
+    }
+    for(const fix of Object.values(legacyArt))bundled.set(fix.file,fix.path);
     if(!moves.idle)throw Error("Нет стойки персонажа.");
     for(const move of Object.values(moves)){
       const m=/^([a-f0-9]{64})\.(gif|png|webp)$/.exec(move.file);
       if(!m || !Number.isFinite(move.ms))throw Error("Ошибка описания анимации.");
       const asset="asset/"+move.file;
       if((await chrome.storage.local.getBytesInUse(asset))>0)continue;
-      const raw=await bytes("files/"+move.file,m[1]);
+      const raw=await bytes(bundled.has(move.file)?chrome.runtime.getURL(bundled.get(move.file)):"files/"+move.file,m[1]);
       const parts=[];
       for(let i=0;i<raw.length;i+=16384)parts.push(String.fromCharCode(...raw.subarray(i,i+16384)));
       await chrome.storage.local.set({[asset]:"data:image/"+m[2]+";base64,"+btoa(parts.join(""))});

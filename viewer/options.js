@@ -27,3 +27,21 @@ choice.onchange=async()=>{
 };
 chrome.storage.onChanged.addListener((changes,area)=>{if(area==="local"&&(indexKey in changes||selectionKey in changes))paint();});
 sync();
+async function showPreferences(){
+  const prefs=await chrome.storage.local.get(preferenceKeys);
+  const slider=document.querySelector("#size"),pixels=document.querySelector("#pixels");
+  slider.value=petSize(prefs[sizeKey]);pixels.value=slider.value+" пикс.";
+  slider.oninput=()=>{pixels.value=slider.value+" пикс.";chrome.storage.local.set({[sizeKey]:Number(slider.value)});};
+  for(const [title,items] of Object.entries(motionGroups)){
+    const group=document.createElement("details"),summary=document.createElement("summary");
+    summary.textContent=title;group.append(summary);
+    for(const [key,name] of Object.entries(items)){
+      const label=document.createElement("label"),box=document.createElement("input"),setting=motionPrefix+key;
+      box.type="checkbox";box.checked=prefs[setting]!==false;
+      box.onchange=()=>chrome.storage.local.set({[setting]:box.checked});
+      label.append(box," "+name);group.append(label);
+    }
+    document.querySelector("#motions").append(group);
+  }
+}
+showPreferences();

@@ -1,14 +1,17 @@
-function startCompanion(host,sprite,pet) {
+function startCompanion(host,sprite,pet,prefs) {
   const moves=pet.animations, now=()=>performance.now(), clamp=(v,max)=>Math.max(0,Math.min(v,max));
   let x=innerWidth*.23,y=innerHeight-56-host.offsetHeight, cursor=null, caught=null;
-  let stillHunt=false;
+  let stillHunt=false, rested=false, landing=null;
   let activity=now(), next=activity+1500, typing=0, hunting=0, side="right", action="", until=0, began=0, last=now();
   const events=new AbortController(), opts={signal:events.signal,passive:true,capture:true};
+  const enabled=k=>!!moves[k] && prefs[motionPrefix+k]!==false;
+  let still;
+  const base=new Image();base.onload=()=>{const canvas=document.createElement("canvas");canvas.width=base.naturalWidth;canvas.height=base.naturalHeight;canvas.getContext("2d").drawImage(base,0,0);still=canvas.toDataURL();if(action==="idle"&&!enabled("idle"))sprite.src=still;};base.src=pet.idle;
   function play(key,t=now(),length) {
-    const m=moves[key];if(!m)return false;
+    const m=moves[key];if(!enabled(key))return false;
     action=key;began=t;until=t+(length??m.ms);sprite.src=m.src;return true;
   }
-  function idle(t){play("idle",t,Infinity);next=t+3000+Math.random()*4000}
+  function idle(t){if(!play("idle",t,Infinity)){action="idle";until=Infinity;if(still)sprite.src=still;else sprite.removeAttribute("src");}next=t+3000+Math.random()*4000}
   function position(){
     x=clamp(x,innerWidth-host.offsetWidth);y=clamp(y,innerHeight-host.offsetHeight);
     host.style.transform='translate('+x+'px,'+y+'px)';
@@ -17,17 +20,26 @@ function startCompanion(host,sprite,pet) {
     if(!cursor)return false;
     const dx=cursor.x-(x+host.offsetWidth*.5),dy=cursor.y-(y+host.offsetHeight*.62);
     const dist=Math.hypot(dx,dy);
-    if(dist<20){return play("pounce-"+side,t)}
-    if(t-hunting>4500)return false;
+    if(dist<20)return finishApproach(t);
+    if(t-hunting>Math.max(4500,Math.hypot(innerWidth,innerHeight)/.27+2000))return false;
     const step=Math.min(dist,dt*.27);x+=dx/dist*step;y+=dy/dist*step;position();
     return true;
+  }
+  function finishApproach(t){
+    landing={x,y};
+    if(play("pounce-"+side,t))return true;
+    caught={...cursor};return play("caught-"+side,t,Infinity);
+  }
+  function approach(t){
+    if(play("stalk-"+side,t,Infinity))return true;
+    const distance=Math.hypot(cursor.x-x-host.offsetWidth/2,cursor.y-y-host.offsetHeight*.62);
+    return distance<=Math.max(host.offsetWidth,100)&&finishApproach(t);
   }
   function startHunt(t){
     if(!cursor)return false;
     side=cursor.x<x+host.offsetWidth/2?"left":"right";
-    if(!moves["stalk-"+side]||!moves["pounce-"+side])return false;
     hunting=t;
-    return play("notice-"+side,t)||play("stalk-"+side,t,Infinity);
+    return play("notice-"+side,t)||approach(t);
   }
   function tick(){
     const t=now(),dt=Math.min(140,t-last);last=t;
@@ -36,7 +48,7 @@ function startCompanion(host,sprite,pet) {
       const m=moves[action],a=m.anchors?.find(p=>p[2]>(t-began)%m.ms)||[.55,.66];
       x=cursor.x-a[0]*host.offsetWidth;y=cursor.y-a[1]*host.offsetHeight;position();return;
     }
-    if(typing>t && moves.typing && !["open","typing"].includes(action)){
+    if(typing>t && enabled("typing") && !["open","typing"].includes(action)){
       if(!play("open",t))play("typing",t,Infinity);
     }
     if(action==="typing"){
@@ -46,39 +58,41 @@ function startCompanion(host,sprite,pet) {
     if(action.startsWith("run-")||action==="jump"){
       x+=(side==="right"?1:-1)*dt*.085;position();
     }
+    if(action.startsWith("pounce-")&&cursor&&landing&&enabled("caught-"+side)){
+      const anchor=moves["caught-"+side].anchors?.[0]||[.55,.66];
+      const progress=Math.min(1,(t-began)/(until-began));
+      x=landing.x+(cursor.x-anchor[0]*host.offsetWidth-landing.x)*progress;
+      y=landing.y+(cursor.y-anchor[1]*host.offsetHeight-landing.y)*progress;position();
+    }
     if(t>=until){
       if(action==="open"&&typing>t&&play("typing",t,Infinity))return;
       if(action==="open"&&play("close",t))return;
       if(action==="fall-asleep"&&play("sleep",t,Infinity))return;
-      if(action.startsWith("notice-")&&play("stalk-"+side,t,Infinity))return;
+      if(action.startsWith("notice-")&&cursor&&approach(t))return;
       if(action.startsWith("pounce-")&&cursor){caught={...cursor};if(play("caught-"+side,t,Infinity))return}
       idle(t);
     }
     if(action!=="idle"&&!action.startsWith("gaze-"))return;
     if(cursor&&!stillHunt&&t-activity>=20000&&t-activity<45000){stillHunt=true;if(startHunt(t))return}
-    if(t-activity>45000 && (play("fall-asleep",t)||play("sleep",t,Infinity)))return;
+    if(!rested && t-activity>45000 && (play("fall-asleep",t)||play("sleep",t,Infinity))){rested=true;return;}
     if(t>=next){
       side=x<innerWidth*.5?"right":"left";
-      const choices=["jump","run-"+side,"greeting","wait","sad","check-result","talking"].filter(k=>moves[k]);
+      const choices=["jump","run-"+side,"greeting","wait","sad","check-result"].filter(enabled);
       if(!choices.length||Math.random()<.23){
         if(cursor&&startHunt(t))return;
       }
       if(choices.length)play(choices[Math.floor(Math.random()*choices.length)],t);
-      else {
-        // A single still image is also a usable pet.
-        sprite.animate([{transform:"translateY(0)"},{transform:"translateY(-40px)"},{transform:"translateY(0)"}],{duration:800});
-      }
       next=t+5000;return;
     }
     if(cursor){
       const dx=cursor.x-x-host.offsetWidth/2,dy=cursor.y-y-host.offsetHeight/2;
       const dir=(Math.round(Math.atan2(dx,-dy)*8/Math.PI)+16)%16;
       const key="gaze-"+String(dir).padStart(2,"0");
-      if(Math.hypot(dx,dy)<220&&moves[key]){if(action!==key)play(key,t,Infinity)}
-      else if(action.startsWith("gaze-"))play("idle",t,Infinity);
+      if(Math.hypot(dx,dy)<220&&enabled(key)){if(action!==key)play(key,t,Infinity)}
+      else if(action.startsWith("gaze-"))idle(t);
     }
   }
-  function wake(){stillHunt=false;activity=now();if(["fall-asleep","sleep"].includes(action))idle(activity)}
+  function wake(){rested=false;stillHunt=false;activity=now();if(["fall-asleep","sleep"].includes(action))idle(activity)}
   document.addEventListener("pointermove",e=>{cursor={x:e.clientX,y:e.clientY};wake()},opts);
   document.addEventListener("pointerdown",e=>{
     wake();const rect=host.getBoundingClientRect();
@@ -91,5 +105,8 @@ function startCompanion(host,sprite,pet) {
   idle(now());next=now()+1500;position();
   // Keep a single scheduler per visible pet.
   const clock=setInterval(tick,50);
-  return ()=>{clearInterval(clock);events.abort()};
+  const stop=()=>{clearInterval(clock);events.abort()};
+  stop.position=position;
+  stop.refresh=()=>{if(action==="idle"||!enabled(action))idle(now());};
+  return stop;
 }
