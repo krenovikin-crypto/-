@@ -25,10 +25,19 @@ function startCompanion(host,sprite,pet,prefs) {
     const step=Math.min(dist,dt*.27);x+=dx/dist*step;y+=dy/dist*step;position();
     return true;
   }
+  function cursorTarget(){
+    const anchor=moves["caught-"+side].anchors?.[0]||[.55,.66];
+    return {x:cursor.x-anchor[0]*host.offsetWidth,y:cursor.y-anchor[1]*host.offsetHeight};
+  }
+  function holdCursor(t){
+    if(!cursor||!enabled("caught-"+side))return false;
+    caught={...cursor};
+    return play("caught-"+side,t,Infinity);
+  }
   function finishApproach(t){
     landing={x,y};
     if(play("pounce-"+side,t))return true;
-    caught={...cursor};return play("caught-"+side,t,Infinity);
+    return holdCursor(t);
   }
   function approach(t){
     if(play("stalk-"+side,t,Infinity))return true;
@@ -45,10 +54,9 @@ function startCompanion(host,sprite,pet,prefs) {
     const t=now(),dt=Math.min(140,t-last);last=t;
     if(action.startsWith("caught-")){
       if(!cursor||Math.hypot(cursor.x-caught.x,cursor.y-caught.y)>38){idle(t);return}
-      const m=moves[action],a=m.anchors?.find(p=>p[2]>(t-began)%m.ms)||[.55,.66];
-      x=cursor.x-a[0]*host.offsetWidth;y=cursor.y-a[1]*host.offsetHeight;position();return;
+      return;
     }
-    if(typing>t && enabled("typing") && !["open","typing"].includes(action)){
+    if(typing>t && enabled("typing") && !["open","typing","close"].includes(action)){
       if(!play("open",t))play("typing",t,Infinity);
     }
     if(action==="typing"){
@@ -59,17 +67,18 @@ function startCompanion(host,sprite,pet,prefs) {
       x+=(side==="right"?1:-1)*dt*.085;position();
     }
     if(action.startsWith("pounce-")&&cursor&&landing&&enabled("caught-"+side)){
-      const anchor=moves["caught-"+side].anchors?.[0]||[.55,.66];
+      const target=cursorTarget();
       const progress=Math.min(1,(t-began)/(until-began));
-      x=landing.x+(cursor.x-anchor[0]*host.offsetWidth-landing.x)*progress;
-      y=landing.y+(cursor.y-anchor[1]*host.offsetHeight-landing.y)*progress;position();
+      x=landing.x+(target.x-landing.x)*progress;
+      y=landing.y+(target.y-landing.y)*progress;position();
     }
     if(t>=until){
       if(action==="open"&&typing>t&&play("typing",t,Infinity))return;
       if(action==="open"&&play("close",t))return;
+      if(action==="close"&&typing>t&&enabled("typing")&&(play("open",t)||play("typing",t,Infinity)))return;
       if(action==="fall-asleep"&&play("sleep",t,Infinity))return;
       if(action.startsWith("notice-")&&cursor&&approach(t))return;
-      if(action.startsWith("pounce-")&&cursor){caught={...cursor};if(play("caught-"+side,t,Infinity))return}
+      if(action.startsWith("pounce-")&&holdCursor(t))return;
       idle(t);
     }
     if(action!=="idle"&&!action.startsWith("gaze-"))return;
@@ -107,6 +116,20 @@ function startCompanion(host,sprite,pet,prefs) {
   const clock=setInterval(tick,50);
   const stop=()=>{clearInterval(clock);events.abort()};
   stop.position=position;
+  stop.test=(key,event)=>{
+    const t=now();
+    if(key==="laptop"){
+      if(!enabled("typing"))return false;
+      idle(t);typing=t+(enabled("open")?moves.open.ms:0)+2400;
+      return play("open",t)||play("typing",t,Infinity);
+    }
+    if(!enabled("caught-"+key))return false;
+    side=key;typing=0;
+    cursor={x:event.clientX,y:event.clientY};
+    if(event.detail===0)cursor={x:innerWidth*.5,y:innerHeight*.75};
+    ({x,y}=cursorTarget());position();
+    return holdCursor(t);
+  };
   stop.refresh=()=>{if(action==="idle"||!enabled(action))idle(now());};
   return stop;
 }

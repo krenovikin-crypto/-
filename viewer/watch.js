@@ -1,5 +1,6 @@
 (() => {
   const preview=location.href.split(/[?#]/)[0]===chrome.runtime.getURL("preview.html");
+  const localPreview=preview&&new URLSearchParams(location.search).has("local");
   const status=preview ? document.querySelector("#preview-status") : null;
   let login, pet, generation=0, host, stop, loading=false,retry=0;
   let prefs=null;
@@ -25,6 +26,17 @@
     if(channel!==login){removePet();login=channel;pet=null;generation++;loading=false;retry=0;}
     if(!prefs||!channel||document.hidden||(!preview&&!isLive(channel))){removePet();return;}
     if(!pet){
+      if(localPreview){
+        const animations={};
+        for(const [key,ms] of Object.entries({idle:0,open:800,typing:900,close:800,"caught-left":1590,"caught-right":1590})){
+          animations[key]={src:chrome.runtime.getURL("art/"+key+".gif"),ms};
+        }
+        animations["caught-left"].anchors=[[.4115,.6635]];
+        animations["caught-right"].anchors=[[.5833,.6635]];
+        pet={name:"Лиса",animations,idle:animations.idle.src};
+        status.textContent="На площадке — Лиса из сборки.";
+        update();return;
+      }
       if(loading || Date.now()<retry)return;
       const epoch=generation;loading=true;
       if(status)status.textContent="Загружаю питомца…";
@@ -63,6 +75,15 @@
     }
     if (area==="local" && (selectionKey in changes || indexKey in changes)) {login=undefined;update();}
   });
+  if(localPreview){
+    document.querySelector("#animation-tests").hidden=false;
+    for(const button of document.querySelectorAll("[data-test]")){
+      button.addEventListener("click",event=>{
+        const started=stop?.test(button.dataset.test,event);
+        status.textContent=started?"На площадке — Лиса из сборки.":"Включи эту анимацию в настройках.";
+      });
+    }
+  }
   document.addEventListener("visibilitychange",update);
   document.addEventListener("fullscreenchange",update);
   window.addEventListener("popstate",update);
